@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Signal {
+  id          String   @id @default(cuid())
+  clerkUserId String   @map("clerk_user_id")
+  content     String   @db.VarChar(240)
+  mood        Mood
+  isPublic    Boolean  @default(false) @map("is_public")
+  dateKey     DateTime @map("date_key") @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([clerkUserId, dateKey], name: "one_signal_per_day")
+  @@index([clerkUserId])
+  @@index([isPublic, createdAt])
+  @@map("signals")
+}
+
+enum Mood {
+  calm
+  focused
+  anxious
+  excited
+  tired
+}
