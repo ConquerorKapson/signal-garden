@@ -70,6 +70,18 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      ((err as { code: string }).code === "P2021" ||
+        (err as { code: string }).code === "P2022")
+    ) {
+      return NextResponse.json(
+        { error: "Database schema is outdated. Please retry in a minute." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
