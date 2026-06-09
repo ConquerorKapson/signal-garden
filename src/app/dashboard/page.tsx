@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { SignalForm } from "@/components/SignalForm";
 import { SignalCard } from "@/components/SignalCard";
 
@@ -54,11 +55,19 @@ export default function DashboardPage() {
               Welcome back, {user?.firstName || "gardener"}
             </p>
           </div>
-          <UserButton
-            appearance={{
-              elements: { avatarBox: "w-9 h-9 ring-2 ring-[var(--border)] ring-offset-2" },
-            }}
-          />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/profile"
+              className="text-[13px] px-3 py-1.5 rounded-full bg-[var(--bg-deep)] text-[var(--text-secondary)] hover:bg-[var(--border)] transition-colors"
+            >
+              📊 Stats
+            </Link>
+            <UserButton
+              appearance={{
+                elements: { avatarBox: "w-9 h-9 ring-2 ring-[var(--border)] ring-offset-2" },
+              }}
+            />
+          </div>
         </div>
       </motion.header>
 
@@ -133,7 +142,12 @@ export default function DashboardPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <SignalCard signal={signal} />
+                    <SignalCard
+                      signal={signal}
+                      editable
+                      onUpdate={fetchSignals}
+                      onDelete={fetchSignals}
+                    />
                   </motion.div>
                 ))}
               </motion.div>

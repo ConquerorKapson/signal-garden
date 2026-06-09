@@ -57,16 +57,19 @@ export async function POST(req: NextRequest) {
 }
 
 // GET /api/signals — get current user's signals
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const limit = Number(req.nextUrl.searchParams.get("limit")) || 30;
+  const all = req.nextUrl.searchParams.get("all") === "true";
+
   const signals = await prisma.signal.findMany({
     where: { clerkUserId: userId },
     orderBy: { dateKey: "desc" },
-    take: 30,
+    ...(all ? {} : { take: limit }),
   });
 
   return NextResponse.json(signals);

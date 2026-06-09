@@ -1,10 +1,10 @@
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
+import { prisma } from "@/lib/prisma";
 
 // This endpoint handles Clerk webhook events
-// In production, Clerk sends user lifecycle events here
-// During local dev, expose this via ngrok
+// Syncs user data to our local DB and cleans up on deletion
 
 export async function POST(req: NextRequest) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -40,15 +40,43 @@ export async function POST(req: NextRequest) {
   // Handle events
   switch (evt.type) {
     case "user.created":
-      console.log("[webhook] user.created:", evt.data.id);
-      // You could sync user data to your DB here if needed
+    case "user.updated": {
+      const { id, email_addresses, first_name, last_name, image_url } = evt.data as {
+        id: string;
+        email_addresses: { email_address: string }[];
+        first_name: string | null;
+        last_name: string | null;
+        image_url: string | null;
+      };
+
+      await prisma.user.upsert({
+        where: { clerkId: id },
+        create: {
+          clerkId: id,
+          email: email_addresses?.[0]?.email_address ?? null,
+          firstName: first_name,
+          lastName: last_name,
+          imageUrl: image_url,
+        },
+        update: {
+          email: email_addresses?.[0]?.email_address ?? null,
+          firstName: first_name,
+          lastName: last_name,
+          imageUrl: image_url,
+        },
+      });
       break;
-    case "user.updated":
-      console.log("[webhook] user.updated:", evt.data.id);
+    }
+    case "user.deleted": {
+      const { id } = evt.data as { id: string };
+      // Cascade delete will remove signals too
+      await prisma.user.delete({
+        where: { clerkId: id },
+      }).catch(() => {
+        // User might not exist in our DB yet
+      });
       break;
-    case "user.deleted":
-      console.log("[webhook] user.deleted:", evt.data.id);
-      break;
+    }
     default:
       console.log("[webhook] unhandled event:", evt.type);
   }
