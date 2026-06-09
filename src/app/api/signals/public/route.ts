@@ -13,6 +13,9 @@ export async function GET() {
       mood: true,
       dateKey: true,
       createdAt: true,
+      user: {
+        select: { firstName: true, imageUrl: true },
+      },
       // Never expose clerkUserId in public feed
     },
   });

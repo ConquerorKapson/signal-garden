@@ -11,6 +11,7 @@ interface PublicSignal {
   mood: string;
   dateKey: string;
   createdAt: string;
+  user?: { firstName: string | null; imageUrl: string | null };
 }
 
 export default function FeedPage() {
@@ -37,7 +38,7 @@ export default function FeedPage() {
             <h1 className="text-lg font-semibold text-[var(--text-primary)] tracking-tight flex items-center gap-2">
               <span>🌍</span> Public Feed
             </h1>
-            <p className="text-[13px] text-[var(--text-tertiary)] mt-0.5">Anonymous signals from the community</p>
+            <p className="text-[13px] text-[var(--text-tertiary)] mt-0.5">Signals from the community</p>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/" className="btn-secondary !py-2 !px-4 !text-[13px]">
@@ -87,7 +88,19 @@ export default function FeedPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <SignalCard signal={signal} showDate />
+                  <div className="card-elevated p-6 space-y-4">
+                    {signal.user && (
+                      <div className="flex items-center gap-2">
+                        {signal.user.imageUrl && (
+                          <img src={signal.user.imageUrl} alt="" className="w-6 h-6 rounded-full" />
+                        )}
+                        <span className="text-[13px] text-[var(--text-secondary)] font-medium">
+                          {signal.user.firstName || "Anonymous"}
+                        </span>
+                      </div>
+                    )}
+                    <SignalCard signal={signal} showDate />
+                  </div>
                 </motion.div>
               ))}
             </motion.div>
