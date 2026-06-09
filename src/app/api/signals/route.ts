@@ -29,6 +29,13 @@ export async function POST(req: NextRequest) {
   today.setHours(0, 0, 0, 0);
 
   try {
+    // Ensure a local user row exists even if webhook delivery is delayed.
+    await prisma.user.upsert({
+      where: { clerkId: userId },
+      create: { clerkId: userId },
+      update: {},
+    });
+
     const signal = await prisma.signal.create({
       data: {
         clerkUserId: userId,
@@ -49,6 +56,17 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "You have already posted a signal today" },
+        { status: 409 }
+      );
+    }
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code: string }).code === "P2003"
+    ) {
+      return NextResponse.json(
+        { error: "User record sync incomplete. Please retry." },
         { status: 409 }
       );
     }
